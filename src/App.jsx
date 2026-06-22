@@ -12,13 +12,13 @@ const TIERS = [
 ];
 
 const PAYMENT_METHODS = [
-  { id: "bank", name: "Nigerian Bank Transfer", icon: "🏦", desc: "All Nigerian Banks" },
-  { id: "opay", name: "OPay / PalmPay", icon: "📱", desc: "Instant transfer" },
-  { id: "btc", name: "Bitcoin (BTC)", icon: "₿", desc: "Crypto payment" },
-  { id: "usdt", name: "USDT (TRC20/ERC20)", icon: "💲", desc: "Stablecoin" },
-  { id: "eth", name: "Ethereum (ETH)", icon: "Ξ", desc: "Crypto payment" },
-  { id: "paypal", name: "PayPal", icon: "🅿", desc: "International" },
-  { id: "cashapp", name: "Cash App", icon: "💸", desc: "USD payments" },
+  { id: "bank", name: "Nigerian Bank Transfer", icon: "🏦", desc: "All Nigerian Banks", placeholder: "Bank Name, Account Number, Account Name" },
+  { id: "opay", name: "OPay / PalmPay", icon: "📱", desc: "Instant transfer", placeholder: "OPay/PalmPay Number & Full Name" },
+  { id: "btc", name: "Bitcoin (BTC)", icon: "₿", desc: "Crypto payment", placeholder: "Enter BTC Wallet Address" },
+  { id: "usdt", name: "USDT (TRC20/ERC20)", icon: "💲", desc: "Stablecoin", placeholder: "Enter TRC20/ERC20 Wallet Address" },
+  { id: "eth", name: "Ethereum (ETH)", icon: "Ξ", desc: "Crypto payment", placeholder: "Enter ETH Wallet Address" },
+  { id: "paypal", name: "PayPal", icon: "🅿", desc: "International", placeholder: "Enter PayPal Email Address" },
+  { id: "cashapp", name: "Cash App", icon: "💸", desc: "USD payments", placeholder: "Enter Cash App $Tag" },
 ];
 
 const fmt = (n) => "₦" + Number(n).toLocaleString();
@@ -151,6 +151,7 @@ export default function App() {
   const [depositMethod, setDepositMethod] = useState(null);
   const [withdrawAmt, setWithdrawAmt] = useState("");
   const [withdrawMethod, setWithdrawMethod] = useState(null);
+  const [accountDetails, setAccountDetails] = useState(""); // New field for user details
   const [toast, setToast] = useState(null);
   const [watchedVideos, setWatchedVideos] = useState([]);
   const [reinvest, setReinvest] = useState(false);
@@ -170,10 +171,13 @@ export default function App() {
   const requestWithdraw = () => {
     if (!withdrawMethod) { showToast("Select a withdrawal method", "#ef4444"); return; }
     if (!withdrawAmt || isNaN(withdrawAmt)) { showToast("Enter a valid amount", "#ef4444"); return; }
+    if (!accountDetails.trim()) { showToast("Please enter your payout account details", "#ef4444"); return; }
     if (Number(withdrawAmt) > user.balance) { showToast("Insufficient balance", "#ef4444"); return; }
     if (Number(withdrawAmt) < 1000) { showToast("Minimum withdrawal is ₦1,000", "#ef4444"); return; }
+    
     setUser(u => ({ ...u, balance: u.balance - Number(withdrawAmt) }));
     setWithdrawAmt("");
+    setAccountDetails("");
     showToast("Withdrawal request submitted! Processing in 24hrs ✅");
   };
 
@@ -494,9 +498,25 @@ export default function App() {
               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 8, fontWeight: 600 }}>WITHDRAWAL AMOUNT (₦)</div>
               <input style={S.input} type="number" placeholder="Enter amount e.g. 5000" value={withdrawAmt} onChange={e => setWithdrawAmt(e.target.value)} />
             </div>
+
+            {/* Added: Dynamic Account Details Fields */}
+            <div style={{ ...S.card, marginBottom: 16 }}>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 8, fontWeight: 600 }}>
+                {withdrawMethod ? `${withdrawMethod.name.toUpperCase()} DETAILS` : "ACCOUNT/WALLET DETAILS"}
+              </div>
+              <input 
+                style={S.input} 
+                type="text" 
+                placeholder={withdrawMethod ? withdrawMethod.placeholder : "Select payment method below first..."} 
+                value={accountDetails} 
+                disabled={!withdrawMethod}
+                onChange={e => setAccountDetails(e.target.value)} 
+              />
+            </div>
+
             <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>Select Withdrawal Method</div>
             {PAYMENT_METHODS.map(pm => (
-              <div key={pm.id} onClick={() => setWithdrawMethod(pm)} style={{ ...S.card, marginBottom: 10, cursor: "pointer", display: "flex", alignItems: "center", gap: 14, border: withdrawMethod?.id === pm.id ? "1px solid #6366f1" : "1px solid rgba(255,255,255,0.08)", background: withdrawMethod?.id === pm.id ? "rgba(99,102,241,0.1)" : "rgba(255,255,255,0.03)" }}>
+              <div key={pm.id} onClick={() => { setWithdrawMethod(pm); setAccountDetails(""); }} style={{ ...S.card, marginBottom: 10, cursor: "pointer", display: "flex", alignItems: "center", gap: 14, border: withdrawMethod?.id === pm.id ? "1px solid #6366f1" : "1px solid rgba(255,255,255,0.08)", background: withdrawMethod?.id === pm.id ? "rgba(99,102,241,0.1)" : "rgba(255,255,255,0.03)" }}>
                 <div style={{ fontSize: 24 }}>{pm.icon}</div>
                 <div>
                   <div style={{ fontWeight: 700 }}>{pm.name}</div>
